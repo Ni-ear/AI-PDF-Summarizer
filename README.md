@@ -74,4 +74,4 @@ A full-stack web app that lets you upload a PDF and get an instant AI-generated 
 
 ## Author
 
-Built by [Your Name] — [GitHub](https://github.com/Ni-ear) | [Portfolio link]
+Built by Shaqkobe Dos P. Tejada — [GitHub](https://github.com/Ni-ear) | [Portfolio link]
