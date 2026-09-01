@@ -11,14 +11,15 @@ app.use(cors());
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  limits: { fileSize: 15 * 1024 * 1024 }, // raised to 15MB since we now handle long docs
 });
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-const MAX_CHARS = 40000;
+// ~4 chars per token; keep each chunk comfortably under the model's context limit
+const CHUNK_SIZE = 35000;
 
 const PROMPTS = {
   bullets: 'Summarize the following document in 5-8 clear bullet points. Focus on the main ideas and key facts.',
@@ -27,6 +28,28 @@ const PROMPTS = {
   eli5: 'Explain the following document in simple terms, as if explaining it to someone with no background knowledge on the topic. Use short sentences and everyday language.',
 };
 
+function splitIntoChunks(text, size) {
+  const chunks = [];
+  for (let i = 0; i < text.length; i += size) {
+    chunks.push(text.slice(i, i + size));
+  }
+  return chunks;
+}
+
+async function summarizeText(text, promptInstruction) {
+  const completion = await groq.chat.completions.create({
+    model: 'openai/gpt-oss-120b',
+    messages: [
+      {
+        role: 'user',
+        content: `${promptInstruction}\n\nDocument:\n${text}`,
+      },
+    ],
+    max_tokens: 1000,
+  });
+  return completion.choices[0]?.message?.content || '';
+}
+
 app.post('/api/summarize', upload.single('pdf'), async (req, res) => {
   try {
     if (!req.file) {
@@ -34,30 +57,40 @@ app.post('/api/summarize', upload.single('pdf'), async (req, res) => {
     }
 
     const style = PROMPTS[req.body.style] ? req.body.style : 'bullets';
+    const promptInstruction = PROMPTS[style];
 
     const data = await pdfParse(req.file.buffer);
-    let text = data.text.trim();
+    const text = data.text.trim();
 
     if (!text) {
       return res.status(400).json({ error: 'Could not extract any text from this PDF' });
     }
 
-    if (text.length > MAX_CHARS) {
-      text = text.slice(0, MAX_CHARS);
+    let summary;
+
+    if (text.length <= CHUNK_SIZE) {
+      // Short enough for a single pass
+      summary = await summarizeText(text, promptInstruction);
+    } else {
+      // Long document: summarize each chunk, then combine the chunk summaries
+      const chunks = splitIntoChunks(text, CHUNK_SIZE);
+      console.log(`Document split into ${chunks.length} chunks for summarization`);
+
+      const chunkSummaries = [];
+      for (let i = 0; i < chunks.length; i++) {
+        const partial = await summarizeText(
+          chunks[i],
+          'Summarize the key points of the following section of a larger document. Be concise.'
+        );
+        chunkSummaries.push(partial);
+      }
+
+      const combinedText = chunkSummaries.join('\n\n');
+      summary = await summarizeText(
+        combinedText,
+        `${promptInstruction} The text below consists of section-by-section summaries of a longer document — combine them into one coherent final summary.`
+      );
     }
-
-    const completion = await groq.chat.completions.create({
-      model: 'openai/gpt-oss-120b',
-      messages: [
-        {
-          role: 'user',
-          content: `${PROMPTS[style]}\n\nDocument:\n${text}`,
-        },
-      ],
-      max_tokens: 1000,
-    });
-
-    const summary = completion.choices[0]?.message?.content || 'No summary generated.';
 
     res.json({ summary });
   } catch (err) {
