@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 const BACKEND_URL = 'https://ai-pdf-summarizer-ttn2.onrender.com';
 
@@ -54,28 +55,137 @@ function App() {
   };
 
   return (
-    <div style={{ maxWidth: 600, margin: '60px auto', fontFamily: 'sans-serif', padding: '0 20px' }}>
-      <h1>PDF Summarizer</h1>
-      <p>Upload a PDF and get a quick bullet-point summary.</p>
+    <div style={styles.page}>
+      <div style={styles.card}>
+        <h1 style={styles.title}>📄 PDF Summarizer</h1>
+        <p style={styles.subtitle}>Upload a PDF and get a quick, clear summary.</p>
 
-      <input type="file" accept="application/pdf" onChange={handleFileChange} />
-
-      <div style={{ marginTop: 16 }}>
-        <button onClick={handleSummarize} disabled={loading || !file}>
-          {loading ? 'Summarizing...' : 'Summarize'}
-        </button>
-      </div>
-
-      {error && <p style={{ color: 'red', marginTop: 16 }}>{error}</p>}
-
-      {summary && (
-        <div style={{ marginTop: 24, whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
-          <h2>Summary</h2>
-          <p>{summary}</p>
+        <div style={styles.uploadRow}>
+          <label style={styles.fileLabel}>
+            {file ? file.name : 'Choose a PDF'}
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
+          </label>
         </div>
-      )}
+
+        <button
+          onClick={handleSummarize}
+          disabled={loading || !file}
+          style={{
+            ...styles.button,
+            opacity: loading || !file ? 0.5 : 1,
+            cursor: loading || !file ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {loading ? 'Summarizing…' : 'Summarize'}
+        </button>
+
+        {loading && (
+          <p style={styles.note}>
+            First request may take up to 30s while the server wakes up.
+          </p>
+        )}
+
+        {error && <p style={styles.error}>{error}</p>}
+
+        {summary && (
+          <div style={styles.summaryBox}>
+            <h2 style={styles.summaryHeading}>Summary</h2>
+            <div style={styles.markdown}>
+              <ReactMarkdown>{summary}</ReactMarkdown>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
+const styles = {
+  page: {
+    minHeight: '100vh',
+    background: '#0f0f13',
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '48px 16px',
+    fontFamily: "'Segoe UI', system-ui, sans-serif",
+  },
+  card: {
+    width: '100%',
+    maxWidth: 640,
+    color: '#e8e8ec',
+  },
+  title: {
+    fontSize: '2.2rem',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  subtitle: {
+    textAlign: 'center',
+    color: '#a0a0ab',
+    marginBottom: 28,
+  },
+  uploadRow: {
+    display: 'flex',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  fileLabel: {
+    background: '#1c1c22',
+    border: '1px solid #33333c',
+    borderRadius: 10,
+    padding: '12px 20px',
+    cursor: 'pointer',
+    fontSize: '0.95rem',
+    color: '#cfcfd6',
+    maxWidth: '100%',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  button: {
+    display: 'block',
+    margin: '0 auto',
+    background: '#6c5ce7',
+    color: 'white',
+    border: 'none',
+    borderRadius: 10,
+    padding: '12px 28px',
+    fontSize: '1rem',
+    fontWeight: 600,
+  },
+  note: {
+    textAlign: 'center',
+    fontSize: '0.85rem',
+    color: '#8a8a94',
+    marginTop: 12,
+  },
+  error: {
+    textAlign: 'center',
+    color: '#ff6b6b',
+    marginTop: 16,
+  },
+  summaryBox: {
+    marginTop: 32,
+    background: '#1a1a20',
+    border: '1px solid #2c2c35',
+    borderRadius: 14,
+    padding: '24px 28px',
+  },
+  summaryHeading: {
+    marginTop: 0,
+    marginBottom: 12,
+    fontSize: '1.3rem',
+  },
+  markdown: {
+    lineHeight: 1.7,
+    fontSize: '0.98rem',
+    color: '#d8d8de',
+  },
+};
 
 export default App;
