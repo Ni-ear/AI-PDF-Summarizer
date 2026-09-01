@@ -54,6 +54,16 @@ function App() {
     }
   };
 
+  const handleDownload = () => {
+    const blob = new Blob([summary], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${file?.name.replace('.pdf', '') || 'summary'}-summary.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div style={styles.page}>
       <div style={styles.card}>
@@ -94,7 +104,12 @@ function App() {
 
         {summary && (
           <div style={styles.summaryBox}>
-            <h2 style={styles.summaryHeading}>Summary</h2>
+            <div style={styles.summaryHeader}>
+              <h2 style={styles.summaryHeading}>Summary</h2>
+              <button onClick={handleDownload} style={styles.downloadButton}>
+                ⬇ Download
+              </button>
+            </div>
             <div style={styles.markdown}>
               <ReactMarkdown>{summary}</ReactMarkdown>
             </div>
@@ -176,10 +191,24 @@ const styles = {
     borderRadius: 14,
     padding: '24px 28px',
   },
-  summaryHeading: {
-    marginTop: 0,
+  summaryHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 12,
+  },
+  summaryHeading: {
+    margin: 0,
     fontSize: '1.3rem',
+  },
+  downloadButton: {
+    background: '#2a2a33',
+    color: '#e8e8ec',
+    border: '1px solid #3a3a44',
+    borderRadius: 8,
+    padding: '6px 14px',
+    fontSize: '0.85rem',
+    cursor: 'pointer',
   },
   markdown: {
     lineHeight: 1.7,
