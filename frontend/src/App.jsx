@@ -3,8 +3,16 @@ import ReactMarkdown from 'react-markdown';
 
 const BACKEND_URL = 'https://ai-pdf-summarizer-ttn2.onrender.com';
 
+const STYLE_OPTIONS = [
+  { value: 'bullets', label: 'Bullet Points' },
+  { value: 'paragraph', label: 'Paragraph' },
+  { value: 'abstract', label: 'Academic Abstract' },
+  { value: 'eli5', label: 'Explain Simply' },
+];
+
 function App() {
   const [file, setFile] = useState(null);
+  const [style, setStyle] = useState('bullets');
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,6 +41,7 @@ function App() {
 
     const formData = new FormData();
     formData.append('pdf', file);
+    formData.append('style', style);
 
     try {
       const res = await fetch(`${BACKEND_URL}/api/summarize`, {
@@ -80,6 +89,20 @@ function App() {
               style={{ display: 'none' }}
             />
           </label>
+        </div>
+
+        <div style={styles.uploadRow}>
+          <select
+            value={style}
+            onChange={(e) => setStyle(e.target.value)}
+            style={styles.select}
+          >
+            {STYLE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <button
@@ -161,6 +184,15 @@ const styles = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+  },
+  select: {
+    background: '#1c1c22',
+    color: '#e8e8ec',
+    border: '1px solid #33333c',
+    borderRadius: 10,
+    padding: '10px 16px',
+    fontSize: '0.9rem',
+    cursor: 'pointer',
   },
   button: {
     display: 'block',

@@ -18,8 +18,14 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-// Roughly 4 chars per token; keep well under the model's context limit
 const MAX_CHARS = 40000;
+
+const PROMPTS = {
+  bullets: 'Summarize the following document in 5-8 clear bullet points. Focus on the main ideas and key facts.',
+  paragraph: 'Summarize the following document in a well-organized paragraph of 4-6 sentences. Focus on the main ideas and key facts.',
+  abstract: 'Write a formal, academic-style abstract (150-250 words) summarizing the following document, covering purpose, method, and key findings if applicable.',
+  eli5: 'Explain the following document in simple terms, as if explaining it to someone with no background knowledge on the topic. Use short sentences and everyday language.',
+};
 
 app.post('/api/summarize', upload.single('pdf'), async (req, res) => {
   try {
@@ -27,7 +33,8 @@ app.post('/api/summarize', upload.single('pdf'), async (req, res) => {
       return res.status(400).json({ error: 'No PDF file uploaded' });
     }
 
-    // Extract text from the uploaded PDF
+    const style = PROMPTS[req.body.style] ? req.body.style : 'bullets';
+
     const data = await pdfParse(req.file.buffer);
     let text = data.text.trim();
 
@@ -44,7 +51,7 @@ app.post('/api/summarize', upload.single('pdf'), async (req, res) => {
       messages: [
         {
           role: 'user',
-          content: `Summarize the following document in 5-8 clear bullet points. Focus on the main ideas and key facts.\n\nDocument:\n${text}`,
+          content: `${PROMPTS[style]}\n\nDocument:\n${text}`,
         },
       ],
       max_tokens: 1000,
