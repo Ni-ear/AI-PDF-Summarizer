@@ -222,12 +222,12 @@ AI-PDF-Summarizer/
 - [x] Dark-themed UI with loading/error states
 - [x] Mobile-responsive design
 - [x] Dark/light mode toggle
-
+- [x] Summary history and favorites
+- [ ] 
 ## 🚀 Planned Improvements
 
 - [ ] Support for multi-document Q&A (RAG-style retrieval)
 - [ ] Additional file formats (DOCX, TXT, images via OCR)
-- [ ] Summary history and favorites
 - [ ] Copy-to-clipboard feature
 - [ ] Advanced chunking strategies for better coherence
 - [ ] API key validation before deployment
