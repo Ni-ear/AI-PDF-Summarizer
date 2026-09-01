@@ -8,7 +8,7 @@ A full-stack web app that lets you upload a PDF and get an instant AI-generated 
 
 https://github.com/user-attachments/assets/9c2abc67-9875-442b-853f-fc14e3718340
 
-
+https://ai-pdf-summarizer-mu.vercel.app
 
 ## Features
 
