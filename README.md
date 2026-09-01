@@ -223,7 +223,7 @@ AI-PDF-Summarizer/
 - [x] Mobile-responsive design
 - [x] Dark/light mode toggle
 - [x] Summary history and favorites
-- [ ] 
+
 ## 🚀 Planned Improvements
 
 - [ ] Support for multi-document Q&A (RAG-style retrieval)
