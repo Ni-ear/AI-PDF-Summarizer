@@ -10,6 +10,12 @@ const STYLE_OPTIONS = [
   { value: 'eli5', label: 'Explain Simply' },
 ];
 
+const ALLOWED_TYPES = [
+  'application/pdf',
+  'text/plain',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+];
+
 function App() {
   const [file, setFile] = useState(null);
   const [style, setStyle] = useState('bullets');
@@ -19,8 +25,8 @@ function App() {
 
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
-    if (selected && selected.type !== 'application/pdf') {
-      setError('Please upload a PDF file.');
+    if (selected && !ALLOWED_TYPES.includes(selected.type)) {
+      setError('Please upload a PDF, DOCX, or TXT file.');
       setFile(null);
       return;
     }
@@ -31,7 +37,7 @@ function App() {
 
   const handleSummarize = async () => {
     if (!file) {
-      setError('Please choose a PDF first.');
+      setError('Please choose a file first.');
       return;
     }
 
@@ -40,7 +46,7 @@ function App() {
     setSummary('');
 
     const formData = new FormData();
-    formData.append('pdf', file);
+    formData.append('file', file);
     formData.append('style', style);
 
     try {
@@ -67,8 +73,9 @@ function App() {
     const blob = new Blob([summary], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
+    const baseName = file?.name.replace(/\.(pdf|docx|txt)$/i, '') || 'summary';
     link.href = url;
-    link.download = `${file?.name.replace('.pdf', '') || 'summary'}-summary.txt`;
+    link.download = `${baseName}-summary.txt`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -76,15 +83,17 @@ function App() {
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h1 style={styles.title}>📄 PDF Summarizer</h1>
-        <p style={styles.subtitle}>Upload a PDF and get a quick, clear summary.</p>
+        <h1 style={styles.title}>📄 Document Summarizer</h1>
+        <p style={styles.subtitle}>
+          Upload a PDF, DOCX, or TXT file and get a quick, clear summary.
+        </p>
 
         <div style={styles.uploadRow}>
           <label style={styles.fileLabel}>
-            {file ? file.name : 'Choose a PDF'}
+            {file ? file.name : 'Choose a file (PDF, DOCX, TXT)'}
             <input
               type="file"
-              accept="application/pdf"
+              accept=".pdf,.docx,.txt"
               onChange={handleFileChange}
               style={{ display: 'none' }}
             />

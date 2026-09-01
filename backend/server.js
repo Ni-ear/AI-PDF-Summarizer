@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const pdfParse = require('pdf-parse').default || require('pdf-parse');
+const mammoth = require('mammoth');
 const Groq = require('groq-sdk');
 
 const app = express();
@@ -11,14 +12,13 @@ app.use(cors());
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 15 * 1024 * 1024 }, // raised to 15MB since we now handle long docs
+  limits: { fileSize: 15 * 1024 * 1024 },
 });
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-// ~4 chars per token; keep each chunk comfortably under the model's context limit
 const CHUNK_SIZE = 35000;
 
 const PROMPTS = {
@@ -27,6 +27,32 @@ const PROMPTS = {
   abstract: 'Write a formal, academic-style abstract (150-250 words) summarizing the following document, covering purpose, method, and key findings if applicable.',
   eli5: 'Explain the following document in simple terms, as if explaining it to someone with no background knowledge on the topic. Use short sentences and everyday language.',
 };
+
+const SUPPORTED_TYPES = {
+  'application/pdf': 'pdf',
+  'text/plain': 'txt',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+};
+
+async function extractText(file) {
+  const kind = SUPPORTED_TYPES[file.mimetype];
+
+  if (kind === 'pdf') {
+    const data = await pdfParse(file.buffer);
+    return data.text.trim();
+  }
+
+  if (kind === 'txt') {
+    return file.buffer.toString('utf-8').trim();
+  }
+
+  if (kind === 'docx') {
+    const result = await mammoth.extractRawText({ buffer: file.buffer });
+    return result.value.trim();
+  }
+
+  throw new Error('Unsupported file type');
+}
 
 function splitIntoChunks(text, size) {
   const chunks = [];
@@ -50,29 +76,32 @@ async function summarizeText(text, promptInstruction) {
   return completion.choices[0]?.message?.content || '';
 }
 
-app.post('/api/summarize', upload.single('pdf'), async (req, res) => {
+app.post('/api/summarize', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No PDF file uploaded' });
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    if (!SUPPORTED_TYPES[req.file.mimetype]) {
+      return res.status(400).json({
+        error: 'Unsupported file type. Please upload a PDF, DOCX, or TXT file.',
+      });
     }
 
     const style = PROMPTS[req.body.style] ? req.body.style : 'bullets';
     const promptInstruction = PROMPTS[style];
 
-    const data = await pdfParse(req.file.buffer);
-    const text = data.text.trim();
+    const text = await extractText(req.file);
 
     if (!text) {
-      return res.status(400).json({ error: 'Could not extract any text from this PDF' });
+      return res.status(400).json({ error: 'Could not extract any text from this file' });
     }
 
     let summary;
 
     if (text.length <= CHUNK_SIZE) {
-      // Short enough for a single pass
       summary = await summarizeText(text, promptInstruction);
     } else {
-      // Long document: summarize each chunk, then combine the chunk summaries
       const chunks = splitIntoChunks(text, CHUNK_SIZE);
       console.log(`Document split into ${chunks.length} chunks for summarization`);
 
