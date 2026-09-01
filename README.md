@@ -221,12 +221,12 @@ AI-PDF-Summarizer/
 - [x] Automatic document chunking for long PDFs (no content lost)
 - [x] Dark-themed UI with loading/error states
 - [x] Mobile-responsive design
+- [x] Dark/light mode toggle
 
 ## 🚀 Planned Improvements
 
 - [ ] Support for multi-document Q&A (RAG-style retrieval)
 - [ ] Additional file formats (DOCX, TXT, images via OCR)
-- [ ] Dark/light mode toggle
 - [ ] Summary history and favorites
 - [ ] Copy-to-clipboard feature
 - [ ] Advanced chunking strategies for better coherence
