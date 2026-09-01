@@ -15,7 +15,12 @@ A full-stack web app that transforms PDFs into AI-generated summaries in your ch
 
 ## Demo
 
-🎥 **[Add your demo video/GIF here]**  
+🎥 ** 
+
+https://github.com/user-attachments/assets/ada34238-8138-486b-bf75-250d32625652
+
+**  
+
 _Show users what the UI looks like and how fast it is_
 
 ## Features
