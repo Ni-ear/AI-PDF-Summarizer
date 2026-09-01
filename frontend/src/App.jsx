@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const BACKEND_URL = 'http://localhost:5000';
+const BACKEND_URL = 'https://ai-pdf-summarizer-ttn2.onrender.com';
 
 function App() {
   const [file, setFile] = useState(null);
